@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добро пожаловать на PetsHub</title>
+    <!-- Связываем HTML с CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Любите домашних животных?</h1>
+        <nav>
+            <a href="#">🐶 Собак</a>
+            <a href="#">🙀 Кошек</a>
+            <a href="#">🦆 или даже Утят</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h2>Привет, мы PetsHub</h2>
+            <p>Сайт еще в разработке, но тут мы будем обозревать самых милых, удивительных, маленьких друзей</p>
+            <img src="https://via.placeholder.com/300" alt="Изображение">
+        </section>
+
+        <section class="about">
+            <h2>Обо нас</h2>
+            <p>О наших друзьях</p>
+            <ul>
+                <li>😎 Круто</li>
+                <li>☺ Мило</li>
+                <li>😂 Смешно</li>
+            </ul>
+        </section>
+
+        <!-- Секция для системы оценок -->
+        <section class="rating-section">
+            <h2>Просьба оценить наш продукт</h2>
+            <div class="stars-container">
+                <div class="stars" id="stars">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <p class="rating-text" id="ratingText">Оцените от 1 до 5 звезд</p>
+            </div>
+            <div id="ratingResult" class="rating-result"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2024 PetsHub. Все права защищены.</p>
+        <p>Свяжитесь с нами: <a href="mailto:example@example.com">example@example.com</a></p>
+    </footer>
+
+    <!-- JavaScript для системы оценок и геолокации -->
+    <script>
+        // Система оценки звездами
+        const stars = document.querySelectorAll('.star');
+        const ratingText = document.getElementById('ratingText');
+        const ratingResult = document.getElementById('ratingResult');
+        let currentRating = 0;
+
+        // Обработчики для звезд
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                currentRating = parseInt(this.getAttribute('data-value'));
+                updateStars(currentRating);
+                sendRatingWithLocation(currentRating);
+            });
+
+            star.addEventListener('mouseover', function() {
+                const hoverRating = parseInt(this.getAttribute('data-value'));
+                updateStars(hoverRating, false);
+            });
+        });
+
+        // Обработчик для ухода мыши с блока звезд
+        document.querySelector('.stars').addEventListener('mouseleave', function() {
+            updateStars(currentRating, true);
+        });
+
+        // Функция обновления внешнего вида звезд
+        function updateStars(rating, isPermanent = true) {
+            stars.forEach(star => {
+                const starValue = parseInt(star.getAttribute('data-value'));
+                if (starValue <= rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+
+            if (isPermanent) {
+                const messages = [
+                    "Оцените от 1 до 5 звезд",
+                    "Плохо 😞",
+                    "Так себе 😐", 
+                    "Нормально 🙂",
+                    "Хорошо 😊",
+                    "Отлично! 🤩"
+                ];
+                ratingText.textContent = messages[rating] || messages[0];
+            }
+        }
+
+        // Функция отправки оценки с геолокацией
+        function sendRatingWithLocation(rating) {
+            ratingResult.innerHTML = '<div class="rating-info">⌛ Отправляем вашу оценку...</div>';
+            ratingResult.className = 'rating-result show';
+
+            if (!navigator.geolocation) {
+                showRatingResult("Спасибо за оценку! Геолокация не поддерживается вашим браузером.", true);
+                saveRatingData({
+                    rating: rating,
+                    error: "Geolocation not supported",
+                    timestamp: new Date().toISOString()
+                });
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                // Успешное получение геолокации
+                function(position) {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+                    const timestamp = new Date().toISOString();
+                    
+                    // Собираем дополнительные данные
+                    const userAgent = navigator.userAgent;
+                    const screenResolution = `${screen.width}x${screen.height}`;
+                    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    const language = navigator.language;
+                    
+                    // Сохраняем данные
+                    saveRatingData({
+                        rating: rating,
+                        latitude: latitude,
+                        longitude: longitude,
+                        accuracy: accuracy,
+                        timestamp: timestamp,
+                        userAgent: userAgent,
+                        screenResolution: screenResolution,
+                        timezone: timezone,
+                        language: language,
+                        pageUrl: window.location.href
+                    });
+                    
+                    showRatingResult(`Спасибо за оценку ${rating} ⭐! Ваш отзыв очень важен для нас!`, true);
+                },
+                // Ошибка получения геолокации
+                function(error) {
+                    let errorType = "unknown";
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorType = "permission_denied";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorType = "position_unavailable";
+                            break;
+                        case error.TIMEOUT:
+                            errorType = "timeout";
+                            break;
+                    }
+                    
+                    // Сохраняем оценку даже без геолокации
+                    saveRatingData({
+                        rating: rating,
+                        geoError: errorType,
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent,
+                        screenResolution: `${screen.width}x${screen.height}`,
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        language: navigator.language,
+                        pageUrl: window.location.href
+                    });
+                    
+                    showRatingResult(`Спасибо за оценку ${rating} ⭐! Ваш отзыв очень важен для нас!`, true);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 60000
+                }
+            );
+        }
+
+        // Функция сохранения данных оценки
+        function saveRatingData(data) {
+            // ВАЖНО: Здесь нужно настроить отправку данных на ваш сервер
+            // Это пример реализации - замените на реальную отправку данных
+            
+            console.log('🐾 Данные оценки PetsHub:', data);
+            
+            // Вариант 1: Отправка в консоль (для тестирования)
+            logToConsole(data);
+            
+            // Вариант 2: Отправка через Google Forms (раскомментируйте когда настроите)
+            // sendToGoogleForm(data);
+            
+            // Вариант 3: Отправка на ваш сервер (раскомментируйте когда настроите)
+            // sendToServer(data);
+            
+            // Вариант 4: Сохранение в localStorage как запасной вариант
+            saveToLocalStorage(data);
+        }
+
+        // Логирование в консоль (для тестирования)
+        function logToConsole(data) {
+            console.group('🐾 Новая оценка PetsHub');
+            console.log('⭐ Оценка:', data.rating);
+            console.log('📍 Координаты:', data.latitude ? `${data.latitude}, ${data.longitude}` : 'Не доступно');
+            console.log('🕐 Время:', data.timestamp);
+            console.log('🌐 Браузер:', data.userAgent);
+            console.log('💻 Разрешение:', data.screenResolution);
+            console.log('🌍 Часовой пояс:', data.timezone);
+            console.log('🗣️ Язык:', data.language);
+            console.groupEnd();
+        }
+
+        // Пример отправки через Google Forms
+        function sendToGoogleForm(data) {
+            // 1. Создайте Google Form с нужными полями
+            // 2. Получите ID формы из URL
+            // 3. Замените YOUR_FORM_ID_HERE на ваш ID
+            /*
+            const formId = 'YOUR_FORM_ID_HERE';
+            const formData = new FormData();
+            formData.append('entry.123456789', data.rating);
+            formData.append('entry.987654321', data.latitude || 'N/A');
+            formData.append('entry.555555555', data.longitude || 'N/A');
+            formData.append('entry.444444444', data.timestamp);
+            
+            fetch(`https://docs.google.com/forms/d/e/${formId}/formResponse`, {
+                method: 'POST',
+                body: formData,
+                mode: 'no-cors'
+            });
+            */
+        }
+
+        // Отправка на ваш сервер
+        function sendToServer(data) {
+            /*
+            fetch('/api/save-rating', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log('✅ Данные отправлены на сервер');
+            })
+            .catch(error => {
+                console.error('❌ Ошибка отправки на сервер:', error);
+            });
+            */
+        }
+
+        // Сохранение в localStorage
+        function saveToLocalStorage(data) {
+            try {
+                const ratings = JSON.parse(localStorage.getItem('petshub_ratings') || '[]');
+                ratings.push(data);
+                localStorage.setItem('petshub_ratings', JSON.stringify(ratings));
+                console.log('💾 Данные сохранены в localStorage');
+            } catch (e) {
+                console.error('❌ Ошибка сохранения в localStorage:', e);
+            }
+        }
+
+        // Функция показа результата оценки
+        function showRatingResult(message, isSuccess) {
+            ratingResult.innerHTML = `
+                <div class="rating-info ${isSuccess ? 'success' : 'error'}">
+                    ${message}
+                </div>
+            `;
+        }
+
+        // Функция для просмотра собранных данных (только для вас)
+        function showCollectedData() {
+            const ratings = JSON.parse(localStorage.getItem('petshub_ratings') || '[]');
+            console.log('📊 Все собранные оценки:', ratings);
+            return ratings;
+        }
+
+        // Чтобы посмотреть все данные, вызовите в консоли браузера: showCollectedData()
+    </script>
+
+</body>
+</html>

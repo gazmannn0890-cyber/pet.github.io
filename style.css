@@ -1,0 +1,73 @@
+/* Общие стили для всего тела сайта */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+/* Стили для шапки */
+header {
+    background: rgba(255, 255, 255, 0.95);
+    color: #4a4a4a;
+    padding: 30px 0;
+    text-align: center;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2.5em;
+    color: #ff6b6b;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+header nav a {
+    color: #667eea;
+    text-decoration: none;
+    margin: 0 20px;
+    font-weight: bold;
+    font-size: 1.1em;
+    transition: color 0.3s ease;
+}
+
+header nav a:hover {
+    color: #ff6b6b;
+    text-decoration: none;
+    transform: scale(1.1);
+}
+
+/* Стили для основного контента */
+main {
+    padding: 40px 20px;
+    max-width: 1000px;
+    margin: 40px auto;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    backdrop-filter: blur(10px);
+}
+
+.intro, .about {
+    margin-bottom: 50px;
+    text-align: center;
+}
+
+.intro h2 {
+    color: #667eea;
+    font-size: 2.2em;
+    margin-bottom: 20px;
+}
+
+.about h2 {
+    color: #ff6b6b;
+    font-size: 2.2em;
+    margin-bottom: 20px;
+}
+
+.intro p, .about p {
+    font
